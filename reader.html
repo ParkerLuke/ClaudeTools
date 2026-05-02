@@ -7,101 +7,258 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Courier New',monospace;background:#0d0d0d;color:#d8d8d8;min-height:100vh;padding:24px;}
-h1{font-size:14px;color:#f0e040;letter-spacing:3px;margin-bottom:20px;font-weight:700;}
-.row{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
-input{background:#1c1c1c;border:1px solid #383838;color:#e0e0e0;padding:8px 12px;font-size:13px;border-radius:4px;outline:none;font-family:'Courier New',monospace;flex:1;}
-input:focus{border-color:#666;}
-button{background:#f0e040;color:#000;border:none;border-radius:4px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Courier New',monospace;letter-spacing:1px;white-space:nowrap;}
-button:hover{background:#ffe000;}
-button:disabled{background:#2a2a2a;color:#666;cursor:default;}
-#status{font-size:11px;color:#777;letter-spacing:1px;margin-bottom:16px;min-height:16px;}
+
+#header{margin-bottom:20px;border-bottom:1px solid #1e1e1e;padding-bottom:16px;}
+.logo{font-size:13px;color:#f0e040;letter-spacing:3px;font-weight:700;}
+.sub{font-size:10px;color:#555;letter-spacing:2px;margin-top:4px;}
+
+.card{background:#111;border:1px solid #252525;border-radius:4px;padding:12px 14px;margin-bottom:12px;}
+label{font-size:10px;color:#666;letter-spacing:1px;display:block;margin-bottom:4px;}
+input{background:#1a1a1a;border:1px solid #333;color:#e0e0e0;padding:7px 10px;font-size:12px;border-radius:3px;outline:none;font-family:'Courier New',monospace;width:100%;}
+input:focus{border-color:#555;}
+
+.row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;}
+.field{flex:1;min-width:120px;}
+.btn{background:#f0e040;color:#000;border:none;border-radius:4px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Courier New',monospace;letter-spacing:1px;white-space:nowrap;height:34px;}
+.btn:hover{background:#ffe000;}
+.btn:disabled{background:#222;color:#555;cursor:default;}
+.btn-ghost{background:#1a1a1a;color:#888;border:1px solid #333;border-radius:3px;padding:6px 12px;font-size:11px;cursor:pointer;font-family:'Courier New',monospace;letter-spacing:1px;height:34px;}
+.btn-ghost:hover{border-color:#555;color:#ccc;}
+
+.token-note{font-size:10px;color:#555;margin-top:6px;line-height:1.6;}
+.token-note a{color:#666;text-decoration:none;}
+.token-note a:hover{color:#aaa;}
+
+#status{font-size:11px;letter-spacing:1px;margin-bottom:16px;min-height:16px;color:#777;}
 #status.ok{color:#7dd87d;}
 #status.err{color:#e07070;}
-.file-block{margin-bottom:24px;border:1px solid #252525;border-radius:4px;}
-.file-hdr{background:#141414;padding:8px 14px;font-size:11px;color:#f0e040;letter-spacing:1px;border-bottom:1px solid #252525;display:flex;justify-content:space-between;align-items:center;}
-.file-hdr span{color:#555;font-size:10px;}
-pre{padding:14px;font-size:11px;line-height:1.6;color:#ccc;white-space:pre-wrap;word-break:break-all;max-height:none;overflow:visible;}
-.meta{font-size:10px;color:#555;letter-spacing:1px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #1a1a1a;}
+#status.loading{color:#f0e040;}
+
+#out{margin-top:8px;}
+.meta-block{font-size:10px;color:#555;letter-spacing:1px;margin-bottom:16px;padding:8px 12px;border:1px solid #1e1e1e;border-radius:3px;line-height:2;}
+.file-block{margin-bottom:20px;border:1px solid #222;border-radius:4px;}
+.file-hdr{background:#141414;padding:7px 12px;font-size:11px;color:#f0e040;letter-spacing:1px;border-bottom:1px solid #1e1e1e;display:flex;justify-content:space-between;align-items:center;}
+.file-hdr .file-meta{color:#444;font-size:10px;}
+pre{padding:12px;font-size:11px;line-height:1.6;color:#bbb;white-space:pre-wrap;word-break:break-all;}
+
+.repo-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.chip{background:#1a1a1a;border:1px solid #2a2a2a;color:#888;border-radius:3px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Courier New',monospace;}
+.chip:hover{border-color:#f0e040;color:#f0e040;}
+.chip .remove{color:#444;margin-left:6px;font-size:10px;}
+.chip .remove:hover{color:#e07070;}
+.section-label{font-size:10px;color:#555;letter-spacing:1px;margin-bottom:6px;}
 </style>
 </head>
 <body>
 
-<h1>CLAUDE REPO READER</h1>
-
-<div class="row">
-  <input type="text" id="repo" placeholder="owner/repo  (e.g. ParkerLuke/CorruptionTracker)" value="ParkerLuke/CorruptionTracker"/>
-  <input type="text" id="branch" placeholder="branch" value="main" style="flex:0 0 100px;"/>
-  <button onclick="load()" id="btn">LOAD</button>
+<div id="header">
+  <div class="logo">CLAUDE REPO READER</div>
+  <div class="sub">GITHUB INTEGRATION · PUBLIC + PRIVATE REPOS</div>
 </div>
 
-<div id="status">ENTER REPO AND CLICK LOAD</div>
+<!-- Token -->
+<div class="card">
+  <label>GITHUB PERSONAL ACCESS TOKEN (sessionStorage only — clears when tab closes)</label>
+  <div class="row">
+    <div class="field">
+      <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" oninput="saveToken()"/>
+    </div>
+    <button class="btn-ghost" onclick="toggleTokenVis()" id="tokenToggle">SHOW</button>
+    <button class="btn-ghost" onclick="clearToken()">CLEAR</button>
+  </div>
+  <div class="token-note">
+    Create a fine-grained token at <a href="https://github.com/settings/tokens?type=beta" target="_blank">github.com/settings/tokens</a> ·
+    Scope: <strong style="color:#888;">Contents: Read-only</strong> on repos you want Claude to access ·
+    Token goes directly to api.github.com only — never stored beyond this tab session
+  </div>
+</div>
+
+<!-- Repo selector -->
+<div class="card">
+  <div class="row" style="margin-bottom:10px;">
+    <div class="field">
+      <label>REPO (owner/name)</label>
+      <input type="text" id="repo" placeholder="ParkerLuke/CorruptionTracker"/>
+    </div>
+    <div style="width:100px;">
+      <label>BRANCH</label>
+      <input type="text" id="branch" placeholder="main" value="main"/>
+    </div>
+    <button class="btn" onclick="load()" id="loadBtn">LOAD</button>
+    <button class="btn-ghost" onclick="saveRepo()">SAVE</button>
+  </div>
+  <div id="savedSection" style="display:none;">
+    <div class="section-label">SAVED REPOS — CLICK TO LOAD</div>
+    <div class="repo-chips" id="repoChips"></div>
+  </div>
+</div>
+
+<div id="status">ENTER TOKEN AND REPO THEN CLICK LOAD</div>
 <div id="out"></div>
 
 <script>
+// ── Token (sessionStorage — clears on tab close) ───────────────────────────
+function saveToken(){
+  const v=document.getElementById('token').value;
+  v ? sessionStorage.setItem('gh_token',v) : sessionStorage.removeItem('gh_token');
+}
+function clearToken(){
+  document.getElementById('token').value='';
+  sessionStorage.removeItem('gh_token');
+}
+function toggleTokenVis(){
+  const el=document.getElementById('token'),btn=document.getElementById('tokenToggle');
+  el.type=el.type==='password'?'text':'password';
+  btn.textContent=el.type==='password'?'SHOW':'HIDE';
+}
+
+// ── Saved repos (localStorage — persists across sessions) ──────────────────
+function getSaved(){try{return JSON.parse(localStorage.getItem('saved_repos')||'[]');}catch{return[];}}
+function saveRepo(){
+  const repo=document.getElementById('repo').value.trim();
+  const branch=document.getElementById('branch').value.trim()||'main';
+  if(!repo)return;
+  const repos=getSaved().filter(r=>r.repo!==repo);
+  repos.unshift({repo,branch});
+  localStorage.setItem('saved_repos',JSON.stringify(repos.slice(0,20)));
+  renderChips();
+}
+function removeRepo(repo){
+  localStorage.setItem('saved_repos',JSON.stringify(getSaved().filter(r=>r.repo!==repo)));
+  renderChips();
+}
+function selectRepo(repo,branch){
+  document.getElementById('repo').value=repo;
+  document.getElementById('branch').value=branch||'main';
+  load();
+}
+function renderChips(){
+  const repos=getSaved();
+  const sec=document.getElementById('savedSection');
+  const chips=document.getElementById('repoChips');
+  if(!repos.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  chips.innerHTML=repos.map(r=>
+    `<span class="chip" onclick="selectRepo('${r.repo}','${r.branch}')">
+      ${r.repo}
+      <span class="remove" onclick="event.stopPropagation();removeRepo('${r.repo}')"> ✕</span>
+    </span>`
+  ).join('');
+}
+
+// ── GitHub API ─────────────────────────────────────────────────────────────
+function getHeaders(){
+  const token=document.getElementById('token').value.trim()||sessionStorage.getItem('gh_token')||'';
+  const h={'Accept':'application/vnd.github+json'};
+  if(token) h['Authorization']=`Bearer ${token}`;
+  return h;
+}
+async function ghFetch(url){
+  const r=await fetch(url,{headers:getHeaders()});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(`GitHub ${r.status}: ${e.message||r.statusText}`);}
+  return r.json();
+}
+
+// ── Main load ──────────────────────────────────────────────────────────────
 async function load(){
-  const repo = document.getElementById('repo').value.trim();
-  const branch = document.getElementById('branch').value.trim() || 'main';
-  if(!repo) return;
-  const btn = document.getElementById('btn');
-  const status = document.getElementById('status');
-  const out = document.getElementById('out');
-  btn.disabled = true;
-  out.innerHTML = '';
-  status.className = '';
-  status.textContent = 'FETCHING FILE TREE...';
+  const repo=document.getElementById('repo').value.trim();
+  const branch=document.getElementById('branch').value.trim()||'main';
+  if(!repo){setStatus('err','ENTER A REPO NAME');return;}
+
+  // Restore token from session if field empty
+  const tf=document.getElementById('token');
+  if(!tf.value){const s=sessionStorage.getItem('gh_token');if(s)tf.value=s;}
+
+  document.getElementById('loadBtn').disabled=true;
+  document.getElementById('out').innerHTML='';
+  setStatus('loading',`FETCHING FILE TREE FOR ${repo}...`);
 
   try{
-    // Get file tree recursively
-    const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/${branch}?recursive=1`);
-    if(!treeRes.ok) throw new Error(`Tree fetch failed: ${treeRes.status} ${treeRes.statusText}`);
-    const treeData = await treeRes.json();
-    const files = (treeData.tree || []).filter(f => f.type === 'blob');
+    const treeData=await ghFetch(`https://api.github.com/repos/${repo}/git/trees/${branch}?recursive=1`);
+    const allFiles=(treeData.tree||[]).filter(f=>f.type==='blob');
 
-    status.textContent = `FOUND ${files.length} FILES — FETCHING CONTENTS...`;
+    const skipExt=/\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|pdf|zip|gz|tar|mp4|mp3|webp|wav|ogg|bin|exe|dll|so|dylib)$/i;
+    const skipPath=/^(node_modules|\.git|dist|build|\.next|vendor)\//i;
+    const textFiles=allFiles.filter(f=>!skipExt.test(f.path)&&!skipPath.test(f.path));
 
-    // Filter to text-readable files (skip binaries)
-    const skip = /\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|pdf|zip|gz|mp4|mp3|webp)$/i;
-    const textFiles = files.filter(f => !skip.test(f.path));
+    setStatus('loading',`FOUND ${textFiles.length} TEXT FILES — FETCHING CONTENTS...`);
 
-    // Fetch all file contents
-    const results = await Promise.all(textFiles.map(async f => {
-      try{
-        const r = await fetch(`https://raw.githubusercontent.com/${repo}/${branch}/${f.path}`);
-        const text = await r.text();
-        return { path: f.path, size: f.size, content: text };
-      }catch(e){
-        return { path: f.path, size: f.size, content: `[ERROR READING FILE: ${e.message}]` };
-      }
-    }));
+    // Fetch in batches of 6
+    const results=[];
+    const BATCH=6;
+    for(let i=0;i<textFiles.length;i+=BATCH){
+      const batch=textFiles.slice(i,i+BATCH);
+      const fetched=await Promise.all(batch.map(async f=>{
+        try{
+          const data=await ghFetch(`https://api.github.com/repos/${repo}/contents/${encodeURIComponent(f.path)}?ref=${branch}`);
+          let content='';
+          if(data.content) content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+          return {path:f.path,size:f.size,content};
+        }catch(e){
+          return {path:f.path,size:f.size,content:`[ERROR: ${e.message}]`};
+        }
+      }));
+      results.push(...fetched);
+      setStatus('loading',`LOADING FILES... ${results.length}/${textFiles.length}`);
+    }
 
-    // Build output — structured for easy Claude reading
-    const ts = new Date().toISOString();
-    let html = `<div class="meta">REPO: ${repo} &nbsp;·&nbsp; BRANCH: ${branch} &nbsp;·&nbsp; FILES: ${results.length} &nbsp;·&nbsp; FETCHED: ${ts}</div>`;
+    const repoInfo=await ghFetch(`https://api.github.com/repos/${repo}`).catch(()=>({}));
+    const ts=new Date().toISOString();
+    const totalSize=results.reduce((a,f)=>a+(f.size||0),0);
 
-    results.forEach(f => {
-      const lines = f.content.split('\n').length;
-      html += `<div class="file-block">
-        <div class="file-hdr">📄 ${f.path} <span>${lines} lines · ${(f.size/1024).toFixed(1)}kb</span></div>
-        <pre>${escHtml(f.content)}</pre>
+    let html=`<div class="meta-block">
+REPO: ${repo}
+BRANCH: ${branch}
+DESCRIPTION: ${repoInfo.description||'—'}
+VISIBILITY: ${repoInfo.private?'PRIVATE':'PUBLIC'}
+DEFAULT BRANCH: ${repoInfo.default_branch||branch}
+FILES LOADED: ${results.length} of ${allFiles.length} total (${allFiles.length-textFiles.length} binary/excluded)
+TOTAL SIZE: ${(totalSize/1024).toFixed(1)}kb
+FETCHED: ${ts}
+    </div>`;
+
+    // File tree index
+    html+=`<div class="file-block">
+      <div class="file-hdr">📁 FILE TREE <span class="file-meta">${results.length} files</span></div>
+      <pre>${results.map(f=>f.path).join('\n')}</pre>
+    </div>`;
+
+    // File contents — each clearly delimited for Claude
+    results.forEach(f=>{
+      const lines=f.content.split('\n').length;
+      html+=`<div class="file-block">
+        <div class="file-hdr">📄 ${f.path} <span class="file-meta">${lines} lines · ${((f.size||0)/1024).toFixed(1)}kb</span></div>
+        <pre>--- FILE: ${f.path} ---
+${escHtml(f.content)}</pre>
       </div>`;
     });
 
-    out.innerHTML = html;
-    status.className = 'ok';
-    status.textContent = `✓ LOADED ${results.length} FILES FROM ${repo} @ ${branch}`;
+    document.getElementById('out').innerHTML=html;
+    setStatus('ok',`✓ LOADED ${results.length} FILES FROM ${repo} @ ${branch} — READY FOR CLAUDE`);
+    saveRepo();
+
   }catch(e){
-    status.className = 'err';
-    status.textContent = `✗ ERROR: ${e.message}`;
+    setStatus('err',`✗ ${e.message}`);
   }
-  btn.disabled = false;
+  document.getElementById('loadBtn').disabled=false;
 }
 
-function escHtml(s){
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+function setStatus(cls,msg){const el=document.getElementById('status');el.className=cls;el.textContent=msg;}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-// Auto-load on page open
-load();
+// ── Init ───────────────────────────────────────────────────────────────────
+(function(){
+  const savedToken=sessionStorage.getItem('gh_token');
+  if(savedToken) document.getElementById('token').value=savedToken;
+  const repos=getSaved();
+  if(repos.length){
+    document.getElementById('repo').value=repos[0].repo;
+    document.getElementById('branch').value=repos[0].branch||'main';
+  }
+  renderChips();
+  // Auto-load if both token and a saved repo exist
+  if(savedToken&&repos.length) load();
+})();
 </script>
 </body>
 </html>
